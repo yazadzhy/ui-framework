@@ -1054,6 +1054,143 @@ Parses and validates filter parameters from the current URL query string against
 
 ---
 
+### App Navigation
+
+#### `navigation`
+
+Controller wrapping the shared `history` instance.
+
+| Property / Method | Type | Description |
+|--------------------|------|-------------|
+| `history` | `History` | Shared `history` instance |
+| `query` | `object` | Current parsed query params (frozen) |
+| `path` | `string` | Current location pathname |
+| `action` | `string` | Most recent navigation action (`'PUSH'`\|`'REPLACE'`\|`'POP'`) |
+| `hash` | `string` | Current location hash (get/set) |
+| `preventNavigationInsideIframe` | `boolean` | When `true`, navigates the top-level window instead of routing internally while embedded in an iframe |
+| `updateQuery(paramsToSet, replace?)` | `function` | Merge (or replace) query params via `history.replace`, without adding a history entry |
+| `navigate(url)` | `function` | Navigate to a new URL (adds a history entry) |
+| `listen(handler)` | `function` | Subscribe to location changes; returns an unsubscribe function |
+| `stopListening(handler)` | `function` | Unsubscribe a previously registered handler |
+
+```jsx
+import {navigation} from '@stellar-expert/ui-framework'
+
+navigation.navigate(`/explorer/${network}/asset/${code}`)
+navigation.updateQuery({sort: 'desc'})
+
+const unsubscribe = navigation.listen(nav => console.log(nav.path, nav.query))
+```
+
+#### `parseQuery(query?, dest?)`
+
+Parse a URL query string (defaults to the current location's search) into a plain object. Repeated `key[]=` params are collected into arrays.
+
+#### `stringifyQuery(query?)`
+
+Serialize a query params object into a URL query string, including the leading `?`. Omits `undefined`/`null`/`''` values.
+
+```jsx
+import {parseQuery, stringifyQuery} from '@stellar-expert/ui-framework'
+
+stringifyQuery({sort: 'desc', tag: ['dex', 'amm']}) // '?sort=desc&tag[]=dex&tag[]=amm'
+parseQuery('?sort=desc&tag[]=dex&tag[]=amm') // {sort: 'desc', tag: ['dex', 'amm']}
+```
+
+#### `parsePath(path)`, `createPath(location)`
+
+Re-exported from the `history` package — parse a path string into `{pathname, search, hash}`, or build a path string from a partial location object.
+
+#### `bindClickNavHandler(container)`
+
+Attaches a delegated click handler on `container` that intercepts same-origin, non-modified link clicks and routes them through `navigation.navigate()` instead of a full page reload. Call once at app startup.
+
+```jsx
+import {bindClickNavHandler} from '@stellar-expert/ui-framework'
+
+bindClickNavHandler(document.body)
+```
+
+---
+
+### App Router
+
+Client-side router built on top of `navigation`/`history`.
+
+#### `Router`
+
+Top-level router. Subscribes to a shared `history` instance and propagates the current location via context.
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `history` | `History` | shared singleton | History instance |
+| `children` | `ReactNode` | — | Router content |
+
+#### `Route`
+
+Renders its content when the current location matches `path`.
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `path` | `string` | Route pattern (e.g. `/explorer/:network/asset/:asset`); omit for an always-matching fallback |
+| `exact` | `boolean` | Require an exact pathname match |
+| `component` | `ComponentType` | Rendered with `{history, location, match}` props |
+| `children` | `ReactNode` | Alternative to `component` |
+
+#### `RouterSwitch`
+
+Renders the first child `Route`/`Redirect` whose path matches the current location (first-match-wins).
+
+#### `Redirect`
+
+Imperatively redirects to another location as a side effect.
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `to` | `string` | — | Target URL |
+| `push` | `boolean` | `false` | Push a new history entry instead of replacing the current one |
+
+```jsx
+import {Router, RouterSwitch, Route, Redirect} from '@stellar-expert/ui-framework'
+
+<Router>
+    <RouterSwitch>
+        <Route path="/explorer/:network/asset/:asset" component={AssetView}/>
+        <Route path="/explorer/:network/account/:id" component={AccountView}/>
+        <Redirect to="/explorer/public"/>
+    </RouterSwitch>
+</Router>
+```
+
+#### `useLocation()`, `useParams()`, `useRouteMatch()`
+
+Hooks for reading the current router state.
+
+```jsx
+import {useParams, useLocation, useRouteMatch} from '@stellar-expert/ui-framework'
+
+function AssetView() {
+    const {network, asset} = useParams()
+    const {pathname, search} = useLocation()
+    const {path, isExact} = useRouteMatch()
+    //...
+}
+```
+
+#### `withRouter(Component)`
+
+Higher-order component injecting `{history, location, match}` props from the router context.
+
+```jsx
+import {withRouter} from '@stellar-expert/ui-framework'
+
+export default withRouter(function AssetView({location, match}) {
+    //...
+})
+```
+
+---
+
 ### Effects
 
 #### `EffectDescription`
@@ -1159,6 +1296,66 @@ Find all keys matching a signature's hint.
 
 ```jsx
 const possibleSigners = findKeysBySignatureHint(signature, potentialSigners)
+```
+
+---
+
+### Charts
+
+SVG charting engine with a StellarExpert theme pre-applied.
+
+#### `Chart`
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `options` | `object` | — | Chart data and options (engine format); `undefined` renders `ChartLoader` |
+| `type` | `'Chart'\|'StockChart'` | `'Chart'` | `StockChart` adds navigator/range-selector support |
+| `title` | `ReactNode` | — | Title rendered above the plot |
+| `inline` | `boolean` | `false` | Render as inline-block (sparkline charts) |
+| `grouped` | `boolean` | `false` | Downsample dense series into time buckets |
+| `range` | `true\|false\|'year'\|'month'` | `false` | Enable the range selector / set the initial visible window |
+| `noLegend` | `boolean` | `false` | Hide the legend section |
+| `container` | `string` | `'segment blank'` | Container CSS class |
+| `modules` | `function[]` | — | Additional engine modules to register, each called as `module(ChartEngine)` |
+| `children` | `ReactNode` | — | Optional content added to the chart header |
+
+```jsx
+import {Chart} from '@stellar-expert/ui-framework'
+
+<Chart type="StockChart" range="year" title="XLM price"
+       options={{
+           series: [{type: 'area', name: 'Price', data: priceHistory}]
+       }}/>
+
+<Chart inline options={{series: [{type: 'line', data: sparklineData}]}}/>
+```
+
+`Chart` is `null`-safe while data is loading — pass `options={undefined}` and it renders `ChartLoader` automatically. `Chart.Loader` and `Chart.withErrorBoundary` are also exposed as static properties on the component for convenience.
+
+#### `ChartEngine`
+
+The underlying charting engine namespace (`Chart`, `StockChart`, `setOptions`, `getOptions`, `Color`, `Axis`, `merge`), exposed for advanced use (registering custom modules, tweaking global theme options).
+
+```jsx
+import {ChartEngine} from '@stellar-expert/ui-framework'
+
+ChartEngine.setOptions({chart: {backgroundColor: 'transparent'}})
+```
+
+#### `ChartLoader`
+
+Placeholder shown while a chart's data is loading (or unavailable).
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `title` | `ReactNode` | — | Title rendered above the placeholder |
+| `unavailable` | `boolean` | `false` | Show "Data unavailable" instead of the loading animation |
+| `container` | `string` | `'segment blank'` | Container CSS class |
+
+```jsx
+import {ChartLoader} from '@stellar-expert/ui-framework'
+
+<ChartLoader title="XLM price" unavailable={loadError}/>
 ```
 
 ---
