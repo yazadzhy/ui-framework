@@ -1,6 +1,6 @@
 import {useEffect, useState} from 'react'
 import isEqual from 'react-fast-compare'
-import {stringifyQuery} from '@stellar-expert/navigation'
+import {stringifyQuery} from '../navigation/query'
 import {addVisibilityChangeListener, isDocumentVisible} from '../state/page-visibility-helpers'
 import {useStellarNetwork} from '../state/stellar-network-hooks'
 import {fetchExplorerApi} from './explorer-api-call'

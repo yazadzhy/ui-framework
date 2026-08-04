@@ -1,6 +1,6 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import {navigation as nav} from '@stellar-expert/navigation'
+import {navigation as nav} from '../navigation/navigation'
 import {BlockSelect} from '../interaction/block-select'
 
 /**
@@ -17,7 +17,7 @@ export class ErrorBoundary extends React.Component {
         e.componentStack = errorInfo?.componentStack
         console.error(e)
         this.setState({lastError: e, url: window.location.href}, () => {
-            const stopListening = nav.history.listen((location) => {
+            const stopListening = nav.history.listen(() => {
                 if (this.state.url !== window.location.href) {
                     stopListening()
                     this.setState({lastError: null, url: null})

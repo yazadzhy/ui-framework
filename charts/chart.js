@@ -27,20 +27,20 @@ export {ChartEngine, ChartLoader}
  * @param {*} [props.children] - Optional content added to the chart header
  * @constructor
  */
-export default function Chart({
-                                 options,
-                                 type = 'Chart',
-                                 title,
-                                 inline,
-                                 grouped,
-                                 range,
-                                 noLegend,
-                                 container = 'segment blank',
-                                 className,
-                                 style,
-                                 modules,
-                                 children
-                             }) {
+export function Chart({
+                          options,
+                          type = 'Chart',
+                          title,
+                          inline,
+                          grouped,
+                          range,
+                          noLegend,
+                          container = 'segment blank',
+                          className,
+                          style,
+                          modules,
+                          children
+                      }) {
     const chart = useRef(null)
     const chartIdRef = useRef(`ixchart${Math.floor(Math.random() * 0x10000000000000)}`)
 

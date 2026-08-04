@@ -1,7 +1,7 @@
 import {useEffect, useState} from 'react'
 import {AssetDescriptor} from '@stellar-expert/asset-descriptor'
-import {stringifyQuery} from '@stellar-expert/navigation'
 import {InMemoryClientCache} from '@stellar-expert/client-cache'
+import {stringifyQuery} from '../navigation/query'
 import {fetchExplorerApi} from '../api/explorer-api-call'
 import {ExplorerBatchInfoLoader} from '../api/explorer-batch-info-loader'
 import {getCurrentStellarNetwork} from '../state/stellar-network-hooks'

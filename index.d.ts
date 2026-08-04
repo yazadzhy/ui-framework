@@ -1210,6 +1210,127 @@ export function FilterView(props: FilterViewProps): React.ReactElement;
 export function parseFiltersFromQuery(fields: FilterFieldDescriptor): Record<string, any>;
 
 // ============================================================================
+// Navigation
+// ============================================================================
+
+/** Parse a path string into pathname/search/hash components (re-exported from `history`) */
+export function parsePath(path: string): Partial<import('history').Path>;
+
+/** Build a path string from a partial location object (re-exported from `history`) */
+export function createPath(location: Partial<import('history').Path>): string;
+
+/** Parse a URL query string (defaults to the current location's search) into an object */
+export function parseQuery(query?: string | null, dest?: Record<string, any> | null): Record<string, any>;
+
+/** Serialize a query params object into a URL query string (including the leading "?") */
+export function stringifyQuery(query?: Record<string, any> | null): string;
+
+export interface NavigationWrapper {
+    /** Shared `history` instance */
+    readonly history: import('history').History;
+    /** Current parsed query params (frozen) */
+    readonly query: Record<string, any>;
+    /** Current location pathname */
+    readonly path: string;
+    /** Most recent navigation action ('PUSH'|'REPLACE'|'POP') */
+    readonly action: string;
+    /** Current location hash */
+    hash: string;
+    /** Redirect the top-level window instead of navigating internally when embedded inside an iframe */
+    preventNavigationInsideIframe: boolean;
+    /** Update query string of the current location (via history.replace, without adding a history entry) */
+    updateQuery(paramsToSet: Record<string, any>, replace?: boolean): void;
+    /** Navigate to a new URL (adds a history entry) */
+    navigate(url: string): void;
+    /** Subscribe to location changes; the handler receives the navigation object. Returns an unsubscribe function */
+    listen(handler: (navigation: NavigationWrapper) => void): () => void;
+    /** Unsubscribe a previously registered location change handler */
+    stopListening(handler: (navigation: NavigationWrapper) => void): void;
+}
+
+/** Navigation controller wrapping the shared history instance */
+export const navigation: NavigationWrapper;
+
+/** Attach a delegated click navigation handler that intercepts and routes link clicks through `navigation` */
+export function bindClickNavHandler(container: Element): void;
+
+// ============================================================================
+// Router
+// ============================================================================
+
+export interface RouteMatch {
+    /** Route pattern that matched (e.g. `/explorer/:network/asset/:asset`) */
+    path: string;
+    /** Portion of the pathname consumed by the match */
+    url: string;
+    /** Captured route params */
+    params: Record<string, string>;
+    /** Whether the pattern matched the pathname exactly */
+    isExact: boolean;
+}
+
+export interface RouterProps {
+    /** History instance (defaults to the shared singleton) */
+    history?: import('history').History;
+    children?: React.ReactNode;
+}
+
+/** Top-level router; subscribes to a shared history instance and propagates the current location via context */
+export function Router(props: RouterProps): React.ReactElement;
+
+export interface RouteProps {
+    /** Route pattern; when omitted the route always matches (fallback) */
+    path?: string;
+    /** Require an exact pathname match */
+    exact?: boolean;
+    /** Component to render with `{history, location, match}` props */
+    component?: React.ComponentType<any>;
+    /** Elements to render (alternative to `component`) */
+    children?: React.ReactNode;
+}
+
+/** Render UI when the current location matches `path`. Publishes its own match to descendants via context */
+export function Route(props: RouteProps): React.ReactElement | null;
+
+export interface RouterSwitchProps {
+    children?: React.ReactNode;
+}
+
+/** Render the first child `Route`/`Redirect` whose path matches the current location */
+export function RouterSwitch(props: RouterSwitchProps): React.ReactElement | null;
+
+export interface RedirectProps {
+    /** Target URL */
+    to: string;
+    /** Push a new history entry instead of replacing the current one */
+    push?: boolean;
+    /** Source pattern (used by `RouterSwitch` for matching) */
+    from?: string;
+    exact?: boolean;
+}
+
+/** Imperatively redirect to another location */
+export function Redirect(props: RedirectProps): null;
+
+/** Access the current location. Re-renders the caller on every navigation */
+export function useLocation(): import('history').Location;
+
+/** Access the params of the closest matched route */
+export function useParams(): Record<string, string>;
+
+/** Access the closest ancestor route match */
+export function useRouteMatch(): RouteMatch;
+
+/** Higher-order component injecting `{history, location, match}` from the router context */
+export function withRouter<P extends object>(
+    component: React.ComponentType<P & {
+        history: import('history').History;
+        location: import('history').Location;
+        match: RouteMatch;
+    }>
+): React.ForwardRefExoticComponent<P & React.RefAttributes<any>> & { WrappedComponent: React.ComponentType<any> };
+
+// ============================================================================
 // Stellar Utilities
 // ============================================================================
 

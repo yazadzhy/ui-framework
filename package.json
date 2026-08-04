@@ -1,8 +1,8 @@
 {
   "name": "@stellar-expert/ui-framework",
-  "version": "1.21.4",
+  "version": "2.0.0",
   "description": "StellarExpert shared UI components library",
-  "author": "orbitlens <orbit@stellar.expert>",
+  "author": "team@stellar.expert",
   "license": "MIT",
   "main": "index.js",
   "module": "./index.js",
@@ -11,19 +11,21 @@
     "*.scss",
     "./charts/chart-default-options.js"
   ],
+  "scripts": {
+    "test": "jest"
+  },
   "keywords": [
     "StellarExpert",
     "UI"
   ],
   "peerDependencies": {
-    "@stellar/stellar-sdk": "^16.0.0",
     "@stellar-expert/asset-descriptor": "^2.0.0",
     "@stellar-expert/claimable-balance-utils": "^2.0.0",
     "@stellar-expert/client-cache": "^1.1.0",
     "@stellar-expert/contract-wasm-interface-parser": "^5.0.1",
     "@stellar-expert/formatter": "^3.1.0",
-    "@stellar-expert/navigation": "^1.1.0",
     "@stellar-expert/tx-meta-effects-parser": "^9.3.0",
+    "@stellar/stellar-sdk": "^16.0.0",
     "classnames": ">=2",
     "deepmerge": "^4.3.1",
     "prop-types": ">=15",
@@ -34,10 +36,14 @@
     "throttle-debounce": ">=5.0.0"
   },
   "dependencies": {
-    "highlight.js": "^11.8.0",
-    "history": "^4.10.1",
-    "react-copy-to-clipboard": "^5.1.0",
-    "react-timeago": "^7.2.0"
+    "highlight.js": "11.11.1",
+    "history": "5.3.0",
+    "react-copy-to-clipboard": "5.1.1",
+    "react-timeago": "8.3.0"
+  },
+  "devDependencies": {
+    "@swc/jest": "0.2.39",
+    "jest": "30.4.2"
   },
   "files": [
     "index.js",
@@ -65,6 +71,7 @@
     "ledger/*",
     "meta/*",
     "module/*",
+    "navigation/*",
     "state/*",
     "stellar/*",
     "toast/*",

@@ -1,6 +1,6 @@
 import React, {useEffect} from 'react'
 import cn from 'classnames'
-import {navigation} from '@stellar-expert/navigation'
+import {navigation} from '../navigation/navigation'
 import {useDependantState} from '../state/state-hooks'
 import './tabs.scss'
 

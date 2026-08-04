@@ -1,6 +1,7 @@
 import React, {useCallback, useEffect, useState} from 'react'
-import {navigation, parseQuery} from '@stellar-expert/navigation'
 import deepmerge from 'deepmerge'
+import {navigation} from '../navigation/navigation'
+import {parseQuery} from '../navigation/query'
 import {Dropdown} from '../controls/dropdown'
 import {resolveFilterEditor} from './filter-editors'
 import './filter.scss'

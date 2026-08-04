@@ -89,9 +89,17 @@ export * from './effect/effect-description'
 export * from './contract/contract-api'
 //filter component
 export * from './filter/filter-view'
+//SPA navigation
+export * from './navigation/navigation'
+export * from './navigation/path-parser'
+export * from './navigation/query'
+export * from './navigation/click-interaction'
+//SPA router
+export * from './navigation/router'
+export * from './navigation/router-hooks'
 //Stellar-specific utils
 export * from './stellar/key-type'
 export * from './stellar/signature-hint-utils'
 export * from './contract/sc-val'
 //charts
-export {default as Chart, ChartEngine, ChartLoader} from './charts'
+export * from './charts/chart'
