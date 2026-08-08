@@ -29,7 +29,7 @@ function FilterCondition({field, value, setValue, removeFilter, edit}) {
         childProps.setValue = updateValue
     }
 
-    const editor = resolveFilterEditor(field)
+    const editor = filter.editor || resolveFilterEditor(field)
     const title = !edit ? '' : (field === 'type' ? '' : filter.title)
     return <span className="filter-condition condensed" title={edit ? '' : filter.description}>
         <span className={'icon-' + filter.icon}/>
@@ -78,7 +78,8 @@ function FiltersGroup({filters, replaceFilter, removeFilter, edit = false}) {
 /**
  * A component for managing search filters
  * @param {object} [presetFilter] - Initial base filters
- * @param {object} [fields] - Custom filter field definitions
+ * @param {object} [fields] - Custom filter field definitions. Each descriptor accepts `title`,
+ *   `description`, `icon`, `multi` and an optional `editor` component.
  * @param {func} [onChange] - Callback triggered when filters change
  */
 export function FilterView({presetFilter, fields = {}, onChange}) {
@@ -203,7 +204,9 @@ export function FilterView({presetFilter, fields = {}, onChange}) {
     }), [updateExternalFilters])
 
     const addFilter = useCallback(field => {
-        replaceFilter(field, '')
+        //a flag field has no value to choose - applying it at once spares the editor pass that would
+        //otherwise flash the bar into edit mode and straight back out again
+        replaceFilter(field, fieldDescriptionMapping[field]?.flag ? 'true' : '')
     }, [replaceFilter])
 
     const title = <span className="nowrap"><span className="icon icon-add-circle"/>Add filter</span>

@@ -89,6 +89,8 @@ export * from './effect/effect-description'
 export * from './contract/contract-api'
 //filter component
 export * from './filter/filter-view'
+//filter editors
+export * from './filter/filter-editors'
 //SPA navigation
 export * from './navigation/navigation'
 export * from './navigation/path-parser'
