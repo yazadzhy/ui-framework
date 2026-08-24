@@ -292,7 +292,33 @@ export class Chart {
     processData() {
         this.applyDataGrouping()
         this.assignColumnMetrics()
+        this.computeDataResolution()
         this.applyStacking()
+    }
+
+    //tooltip reads it to decide whether a date needs a time component —
+    //sub-day candles would otherwise all carry the same header.
+    computeDataResolution() {
+        let resolution = Infinity
+        for (const s of this.series) {
+            if (!s.visible)
+                continue
+            let prevX = null
+            for (const pt of s.plotPoints) {
+                //skip null markers (e.g. the trailing [now, null…] the price view appends) — they carry
+                //no data and would report a gap the series doesn't actually resolve
+                if (!isNumber(pt.y) && !isNumber(pt.close))
+                    continue
+                if (prevX !== null) {
+                    const gap = pt.x - prevX
+                    if (gap > 0 && gap < resolution) {
+                        resolution = gap
+                    }
+                }
+                prevX = pt.x
+            }
+        }
+        this.dataResolution = resolution === Infinity ? null : resolution
     }
 
     applyDataGrouping() {

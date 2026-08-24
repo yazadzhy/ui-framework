@@ -1,6 +1,7 @@
 import {pick, uniqueId, isNumber, clamp} from '../core/utilities'
 import {revealLeftToRight} from '../core/animate'
 import {LineSeries} from './line-series'
+import {smoothSegmentCurves} from './series'
 
 export class AreaSeries extends LineSeries {
     resolveFill() {
@@ -19,35 +20,46 @@ export class AreaSeries extends LineSeries {
         return {fill: fc, opacity: 1}
     }
 
+    //fill path — the line path closed down to the axis baseline.
+    areaPath() {
+        const step = this.resolveOption('step')
+        const tVal = isNumber(this.threshold) ? this.threshold : this.yAxis.min
+        const baselineY = this.yAxis.toPixels(clamp(tVal, this.yAxis.min, this.yAxis.max))
+        let d = ''
+        for (const seg of this.segments) {
+            const first = seg[0]
+            const last = seg[seg.length - 1]
+            //rise from the baseline to the first point, trace the top edge, drop back down
+            d += `M ${first.plotX} ${baselineY} L ${first.plotX} ${first.plotY} `
+            if (this.isSmoothSegment(seg)) {
+                //areaspline: the same bezier run the line uses
+                d += smoothSegmentCurves(seg)
+            } else {
+                for (let i = 1; i < seg.length; i++) {
+                    const pt = seg[i]
+                    if (step === 'left') {
+                        d += `L ${pt.plotX} ${seg[i - 1].plotY} `
+                    } else if (step === 'right') {
+                        d += `L ${seg[i - 1].plotX} ${pt.plotY} `
+                    }
+                    d += `L ${pt.plotX} ${pt.plotY} `
+                }
+            }
+            d += `L ${last.plotX} ${baselineY} Z `
+        }
+        return d.trim()
+    }
+
     render(group) {
         this.group = group
         const renderer = this.chart.renderer
         const color = this.getColor()
         const lineWidth = pick(this.options.lineWidth, this.chart.options.plotOptions.series.lineWidth, 2)
 
-        //area fill — line path closed down to the axis baseline
         const lineD = this.linePath()
-        const step = this.resolveOption('step')
         if (lineD && this.segments.length) {
-            const tVal = isNumber(this.threshold) ? this.threshold : this.yAxis.min
-            const baselineY = this.yAxis.toPixels(clamp(tVal, this.yAxis.min, this.yAxis.max))
-            let areaD = ''
-            for (const seg of this.segments) {
-                const first = seg[0]
-                const last = seg[seg.length - 1]
-                areaD += `M ${first.plotX} ${baselineY} `
-                seg.forEach((pt, i) => {
-                    if (step === 'left' && i > 0) {
-                        areaD += `L ${pt.plotX} ${seg[i - 1].plotY} `
-                    } else if (step === 'right' && i > 0) {
-                        areaD += `L ${seg[i - 1].plotX} ${pt.plotY} `
-                    }
-                    areaD += `L ${pt.plotX} ${pt.plotY} `
-                })
-                areaD += `L ${last.plotX} ${baselineY} Z `
-            }
             const {fill, opacity} = this.resolveFill()
-            renderer.path(areaD.trim(), {'stroke-width': 0}).css({fill, 'fill-opacity': opacity}).add(group)
+            renderer.path(this.areaPath(), {'stroke-width': 0}).css({fill, 'fill-opacity': opacity}).add(group)
             //line on top
             renderer.path(lineD, {'stroke-width': lineWidth, fill: 'none', 'stroke-linejoin': 'round'}).css({stroke: color}).add(group)
             if (this.chart.animateThisRender)
