@@ -27,6 +27,36 @@ const WEEK = 7 * DAY
 const GROUP_UNIT_MS = {millisecond: 1, second: SECOND, minute: MINUTE, hour: HOUR, day: DAY, week: WEEK}
 
 /**
+ * Point holds a value to report — axis-stretching markers like [now, null…] don't
+ * @param {{}} point
+ * @return {boolean}
+ */
+export function hasValue(point) {
+    return !!point && (isNumber(point.y) || isNumber(point.close))
+}
+
+/**
+ * Nearest point of a series that actually has a value.
+ * @param {Series} series
+ * @param {number} xVal
+ * @return {{}|null}
+ */
+export function nearestPoint(series, xVal) {
+    let best = null
+    let bestDistance = Infinity
+    for (const p of series.plotPoints) {
+        if (!hasValue(p))
+            continue
+        const distance = Math.abs(p.x - xVal)
+        if (distance < bestDistance) {
+            bestDistance = distance
+            best = p
+        }
+    }
+    return best
+}
+
+/**
  * How much time a single plotted point covers — the data-grouping bucket when grouping is active
  * (authoritative even where the data is sparse), otherwise the measured spacing of the drawn points.
  * @param {{}} point - hovered point
@@ -124,11 +154,7 @@ export class Tooltip {
         let key = null
         for (const s of chart.series) {
             if (!s.visible || !s.plotPoints.length) continue
-            let best = null, bd = Infinity
-            for (const p of s.plotPoints) {
-                const d = Math.abs(p.x - xVal)
-                if (d < bd) { bd = d; best = p }
-            }
+            const best = nearestPoint(s, xVal)
             if (best) { key = best.x; break }
         }
         if (key === null) { this.hide(); return }
@@ -137,11 +163,7 @@ export class Tooltip {
         const markers = []
         for (const s of chart.series) {
             if (!s.visible) continue
-            let best = null, bd = Infinity
-            for (const p of s.plotPoints) {
-                const d = Math.abs(p.x - key)
-                if (d < bd) { bd = d; best = p }
-            }
+            const best = nearestPoint(s, key)
             if (best && isNumber(best.y)) {
                 //series-level tooltip wins; fall back to the chart-level tooltip (e.g. OHLC pointFormatter)
                 const tOpts = s.options.tooltip || chart.options.tooltip
